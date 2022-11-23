@@ -75,10 +75,12 @@ public final class Util {
 
     private static Connection openConnection() {
         try {
-            return DriverManager.getConnection(
+            Connection connection = DriverManager.getConnection(
                     PropertiesUtil.get(URL_KEY),
                     PropertiesUtil.get(USERNAME_KEY),
                     PropertiesUtil.get(PASSWORD_KEY));
+            connection.setAutoCommit(false);
+            return connection;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
