@@ -22,7 +22,11 @@ public final class Util {
 
     static {
         loadDriver();
-        initConnectionPool();
+        try {
+            initConnectionPool();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Util() {
@@ -36,7 +40,7 @@ public final class Util {
         }
     }
 
-    private static void initConnectionPool() {
+    private static void initConnectionPool() throws SQLException {
         String poolSize = PropertiesUtil.get(POOL_SIZE_KEY);
         int guaranteedSize = poolSize == null ? DEFAULT_POOL_SIZE : Integer.parseInt(poolSize);
         pool = new ArrayBlockingQueue<>(guaranteedSize);
@@ -73,9 +77,10 @@ public final class Util {
         }
     }
 
-    private static Connection openConnection() {
+    private static Connection openConnection() throws SQLException {
+        Connection connection = null;
         try {
-            Connection connection = DriverManager.getConnection(
+            connection = DriverManager.getConnection(
                     PropertiesUtil.get(URL_KEY),
                     PropertiesUtil.get(USERNAME_KEY),
                     PropertiesUtil.get(PASSWORD_KEY));
@@ -83,6 +88,11 @@ public final class Util {
             return connection;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (connection != null) {
+                connection.setAutoCommit(true);
+                connection.close();
+            }
         }
     }
 }
